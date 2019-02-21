@@ -6,7 +6,7 @@
 
 There are mainly two ways to use ILogger:
 
-- By injecting into the class constructor, which makes writing unit test simpler. It is recommended if instances of the class will be created using dependency injection (like mvc controllers). Not intended to be used in classes that will be instanciated directly, because it would require us to pass ILogger through the call stack (i.e. `var msg = new Message(this.logger)`).
+- By injecting into the class constructor, which makes writing unit test simpler. It is recommended if instances of the class will be created using dependency injection (like mvc controllers). Not intended to be used in classes that will be instantiated directly, because it would require us to pass ILogger through the call stack (i.e. `var msg = new Message(this.logger)`).
 
 ```c#
 public class MyController
@@ -20,7 +20,7 @@ public class MyController
 }
 ```
 
-- Using an utility class to make logging available to all library classes, without having to add ILogger to the constructor of every class that logs data. It makes unit testing a less clean as we need to provide a concrete implementation onto the static class.
+- Using a utility class to make logging available to all library classes, without having to add ILogger to the constructor of every class that logs data. It makes unit testing a less clean as we need to provide a concrete implementation onto the static class.
   
 ```c#
 internal static class ApplicationLogging
@@ -138,7 +138,7 @@ An option to handle application errors in a single place is through  [app.UseExc
 
 #### ASP.NET Core and Application Insights
 
-Application Insights integrates well with ASP.NET Core. With [little effort](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-dotnetcore-quick-start) request, error, dependency, traces, metrics and many more information becomes available on Application Insights Portal. If you double down on Application Insights as your Log Management system you can use a sink that output application logs to it. This way application and web logs will be available in a single searcheable database.
+Application Insights integrates well with ASP.NET Core. With [little effort](https://docs.microsoft.com/en-us/azure/application-insights/app-insights-dotnetcore-quick-start) request, error, dependency, traces, metrics and many more information becomes available on Application Insights Portal. If you double down on Application Insights as your Log Management system you can use a sink that output application logs to it. This way application and web logs will be available in a single searchable database.
 
 #### Adding a custom provider to ASP.NET Core Project
 
@@ -149,7 +149,7 @@ This section demonstrates how to add Serilog to an ASP.NET Core project. Adding 
 ```text
 Serilog.AspNetCore
 Serilog.Settings.Configuration
-Serilog.Sinks.ColoredConsole (optional, in case console sink is needed)
+Serilog.Sinks.Console (optional, in case console sink is needed)
 ```
 
 1. Remove the console and debug providers by modifying the Program.cs file and clearing the registered providers.
@@ -157,17 +157,16 @@ Serilog.Sinks.ColoredConsole (optional, in case console sink is needed)
 ```C#
  public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
-                .ConfigureLogging((hostingContext, config) =>
-                {
-                    config.ClearProviders();
-                }) // this will remove Console and Debug loggers
                 .UseStartup<Startup>()
+                .ConfigureLogging((logging) => {
+                    logging.ClearProviders();
+                });  // this will remove Console and Debug loggers
 ```
 
 3. Add Serilog to the services collection
 
 ```C#
-public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory, IServiceProvider serviceProvider)
+public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
 {
     if (env.IsDevelopment())
     {
@@ -193,6 +192,7 @@ public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerF
     }
   },
   "Serilog": {
+    "MinimumLevel": "Debug",
     "Using": [ "Serilog.Sinks.Console" ],
     "WriteTo": [
       {
